@@ -2,206 +2,286 @@
 base_model: microsoft/biogpt
 library_name: peft
 pipeline_tag: text-generation
+license: mit
+language:
+- en
 tags:
-- base_model:adapter:microsoft/biogpt
+- biomedical
+- pubmed
+- question-answering
 - lora
 - transformers
+- peft
+datasets:
+- pubmed_qa
 ---
 
-# Model Card for Model ID
+# BioChatAI – Fine-tuned BioGPT with LoRA for Biomedical Question Answering
 
-<!-- Provide a quick summary of what the model is/does. -->
+## Model Overview
 
+**BioChatAI** is a parameter-efficient, domain-adapted biomedical language model fine-tuned from **Microsoft’s BioGPT** using **LoRA (Low-Rank Adaptation)**.  
+It is designed for **biomedical question answering, literature synthesis, and research assistance**, while retaining the core biomedical knowledge of the base BioGPT model.
 
+The model was trained on curated biomedical question–answer pairs derived from **PubMedQA**, enabling accurate, citation-aware responses with minimal computational cost.
+
+---
 
 ## Model Details
 
-### Model Description
+- **Developed by:**  
+  Shreenidhi G, Tharika N S, Thanushika Sri R A, Harithra S  
+- **Supervised by:** Dr. Mithun Kumar  
+- **Institution:** School of Artificial Intelligence, Amrita Vishwa Vidyapeetham, Coimbatore, India  
+- **Model type:** Autoregressive Language Model (GPT-based)  
+- **Base model:** microsoft/biogpt (234M parameters)  
+- **Fine-tuning method:** LoRA (Low-Rank Adaptation)  
+- **Language:** English (Biomedical domain)  
+- **License:** MIT  
 
-<!-- Provide a longer summary of what this model is. -->
+---
 
-
-
-- **Developed by:** [More Information Needed]
-- **Funded by [optional]:** [More Information Needed]
-- **Shared by [optional]:** [More Information Needed]
-- **Model type:** [More Information Needed]
-- **Language(s) (NLP):** [More Information Needed]
-- **License:** [More Information Needed]
-- **Finetuned from model [optional]:** [More Information Needed]
-
-### Model Sources [optional]
-
-<!-- Provide the basic links for the model. -->
-
-- **Repository:** [More Information Needed]
-- **Paper [optional]:** [More Information Needed]
-- **Demo [optional]:** [More Information Needed]
-
-## Uses
-
-<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->
+## Intended Uses
 
 ### Direct Use
 
-<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->
+BioChatAI is suitable for:
 
-[More Information Needed]
+- Biomedical question answering  
+- Literature synthesis and summarization  
+- Clinical and biomedical research assistance  
+- Medical education support  
+- Automated literature review  
 
-### Downstream Use [optional]
+### Downstream Use
 
-<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
+The model can be integrated into:
 
-[More Information Needed]
+- Research assistant applications  
+- Medical chatbots (non-clinical)  
+- Healthcare information systems  
+- Academic research platforms  
+- Clinical decision-support tools (with expert oversight)  
 
 ### Out-of-Scope Use
 
-<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->
+This model **must not** be used for:
 
-[More Information Needed]
+- Direct clinical diagnosis or treatment decisions  
+- Patient-facing medical advice without professional supervision  
+- Emergency or life-critical medical situations  
+- Replacing licensed healthcare professionals  
 
-## Bias, Risks, and Limitations
-
-<!-- This section is meant to convey both technical and sociotechnical limitations. -->
-
-[More Information Needed]
-
-### Recommendations
-
-<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->
-
-Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.
-
-## How to Get Started with the Model
-
-Use the code below to get started with the model.
-
-[More Information Needed]
+---
 
 ## Training Details
 
 ### Training Data
 
-<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->
-
-[More Information Needed]
+- **Dataset:** PubMedQA (curated subset)  
+- **Size:** 50 high-quality biomedical QA pairs  
+- **Source:** Peer-reviewed PubMed abstracts  
+- **Domains:** Oncology, cardiology, neurology, immunology  
+- **Data characteristics:** Context-rich abstracts with verified citations  
 
 ### Training Procedure
 
-<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->
+- **Fine-tuning approach:** LoRA (parameter-efficient fine-tuning)  
+- **Target modules:** Query (Q) and Value (V) projection layers  
 
-#### Preprocessing [optional]
+#### LoRA Configuration
 
-[More Information Needed]
-
+- Rank (r): 8  
+- Alpha: 16  
+- Dropout: 0.1  
+- Trainable parameters: ~1.2M  
+- Percentage of total parameters trained: **0.53%**  
 
 #### Training Hyperparameters
 
-- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->
+- Training regime: CPU-based  
+- Learning rate: 2e-4  
+- Batch size: 2  
+- Gradient accumulation steps: 4  
+- Epochs: 3  
+- Optimizer: AdamW  
+- Weight decay: 0.01  
+- Warmup steps: 100  
+- Max sequence length: 512  
 
-#### Speeds, Sizes, Times [optional]
+#### Training Performance
 
-<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->
+- Training time: ~61 minutes (CPU)  
+- Final training loss: 2.89  
+- Loss reduction: 11% vs. base model  
+- Checkpoint size: ~4.8 MB (LoRA adapters only)  
+- Memory usage: ~8 GB RAM  
 
-[More Information Needed]
+---
 
 ## Evaluation
 
-<!-- This section describes the evaluation protocols and provides the results. -->
+### Evaluation Data
 
-### Testing Data, Factors & Metrics
+- **Dataset:** PubMedQA evaluation subset  
+- **Size:** 10 held-out biomedical questions  
+- **Coverage:** Multi-domain biomedical topics  
 
-#### Testing Data
+### Metrics
 
-<!-- This should link to a Dataset Card if possible. -->
+#### Language Generation Quality
 
-[More Information Needed]
+- BLEU-1: 0.116  
+- BLEU-2: 0.052  
+- Perplexity: 11% improvement over base BioGPT  
 
-#### Factors
+#### Biomedical Performance (BioASQ-inspired)
 
-<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->
+- F1 Score: 0.82  
+- Citation Accuracy: 94%  
+- Semantic Similarity: 0.87 (BioBERT-based)  
 
-[More Information Needed]
+#### System Performance
 
-#### Metrics
+- Average response time: ~30 seconds  
+- Context relevance score: 0.85  
 
-<!-- These are the evaluation metrics being used, ideally with a description of why. -->
+### Results Summary
 
-[More Information Needed]
+- 11% reduction in training loss  
+- High factual consistency with citations  
+- Strong domain-specific language generation  
+- Efficient adaptation with minimal trainable parameters  
 
-### Results
+---
 
-[More Information Needed]
+## Bias, Risks, and Limitations
 
-#### Summary
+### Known Limitations
 
+- Fine-tuned on a small dataset (50 QA pairs)  
+- English-only biomedical content  
+- Reflects publication bias present in biomedical literature  
+- Training data current only up to 2024  
+- Not validated for real-world clinical deployment  
 
+### Bias Considerations
 
-## Model Examination [optional]
+- Potential demographic and geographic bias toward Western biomedical research  
+- Limited representation of rare diseases  
 
-<!-- Relevant interpretability work for the model goes here -->
+### Recommendations
 
-[More Information Needed]
+Users should:
 
-## Environmental Impact
+- Verify outputs against original research papers  
+- Use the model strictly as a research assistant  
+- Cross-check with updated clinical guidelines  
+- Consult healthcare professionals for medical decisions  
 
-<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->
+---
 
-Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
+## How to Use the Model
 
-- **Hardware Type:** [More Information Needed]
-- **Hours used:** [More Information Needed]
-- **Cloud Provider:** [More Information Needed]
-- **Compute Region:** [More Information Needed]
-- **Carbon Emitted:** [More Information Needed]
+```python
+from transformers import BioGptTokenizer, BioGptForCausalLM
+from peft import PeftModel
 
-## Technical Specifications [optional]
+# Load base model and tokenizer
+base_model_name = "microsoft/biogpt"
+tokenizer = BioGptTokenizer.from_pretrained(base_model_name)
+base_model = BioGptForCausalLM.from_pretrained(base_model_name)
 
-### Model Architecture and Objective
+# Load LoRA adapter
+peft_model_id = "your-username/biochatai-biogpt-lora"
+model = PeftModel.from_pretrained(base_model, peft_model_id)
 
-[More Information Needed]
+# Generate a response
+query = "What is the mechanism of action of mRNA vaccines?"
+inputs = tokenizer(query, return_tensors="pt")
+outputs = model.generate(**inputs, max_length=512, temperature=0.7)
+response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+print(response)
+
+```
+
+## Technical Specifications
+### Architecture
+
+Base architecture: BioGPT (GPT-2 variant)
+
+Total parameters: 234M
+
+Transformer layers: 16
+
+Attention heads: 16
+
+Hidden size: 1024
+
+Vocabulary size: 42,384 (biomedical-specific)
 
 ### Compute Infrastructure
-
-[More Information Needed]
-
 #### Hardware
 
-[More Information Needed]
+CPU-based training
+
+Minimum 16 GB RAM recommended
 
 #### Software
 
-[More Information Needed]
+PyTorch 2.0+
 
-## Citation [optional]
+Transformers 4.30+
 
-<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
+PEFT 0.17.1
 
-**BibTeX:**
+Python 3.8+
 
-[More Information Needed]
+##### Environmental Impact
 
-**APA:**
+Hardware type: Consumer-grade CPU
 
-[More Information Needed]
+Training duration: ~1 hour
 
-## Glossary [optional]
+Estimated energy usage: ~0.5 kWh
 
-<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->
+Estimated carbon footprint: < 0.1 kg CO₂eq
 
-[More Information Needed]
+LoRA fine-tuning reduced trainable parameters by 99.47%, significantly lowering computational and environmental costs.
 
-## More Information [optional]
+## Citation
 
-[More Information Needed]
+If you use this model in your research, please cite:
+```bibtex
+@misc{biochatai2024,
+  title={BioChatAI: Parameter-Efficient Fine-tuning of BioGPT for Biomedical Question Answering},
+  author={Shreenidhi G and Tharika N S and Thanushika Sri R A and Harithra S},
+  year={2024},
+  institution={School of Artificial Intelligence, Amrita Vishwa Vidyapeetham},
+  supervisor={Dr. Mithun Kumar}
+}
+```
+## Model Card Authors
 
-## Model Card Authors [optional]
+Shreenidhi G
 
-[More Information Needed]
+Tharika N S
 
-## Model Card Contact
+Thanushika Sri R A
 
-[More Information Needed]
-### Framework versions
+Harithra S
 
-- PEFT 0.17.1
+Supervisor: Dr. Mithun Kumar
+
+## Framework Versions
+
+PEFT 0.17.1
+
+Transformers 4.30+
+
+PyTorch 2.0+
+
+Contact
+
+For questions or issues, please open an issue on the repository
