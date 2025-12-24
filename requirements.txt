@@ -1,0 +1,103 @@
+# Enhanced BioRAG Requirements - Cleaned and aligned
+
+# Core Framework
+fastapi==0.104.1
+starlette==0.27.0
+uvicorn[standard]==0.24.0
+pydantic==2.4.2
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# HTTP Clients and I/O
+httpx==0.25.1
+aiofiles==23.2.1
+aiohttp==3.9.0
+requests==2.31.0
+
+# Machine Learning Core
+torch>=2.0.0
+transformers>=4.35.0
+tokenizers>=0.15.0
+sentence-transformers>=2.2.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+scipy>=1.11.0
+pandas>=2.1.0
+
+# Biomedical NLP / Metrics
+nltk>=3.8.1
+rouge-score>=0.1.2
+spacy>=3.7.0
+bert-score>=0.3.13
+datasets>=2.14.0
+
+# Vector Search and Storage
+faiss-cpu==1.8.0.post1
+elasticsearch==8.11.0
+
+# Document Processing
+python-docx>=0.8.11
+PyPDF2>=3.0.1
+beautifulsoup4>=4.12.2
+lxml>=4.9.3
+
+# Authentication and Security (aligned to code)
+PyJWT==2.8.0
+bcrypt==4.1.2
+cryptography>=41.0.0
+
+# Reliability and Config
+tenacity>=8.2.3
+backoff>=2.2.1
+omegaconf>=2.3.0
+hydra-core>=1.3.0
+
+# Monitoring and Logging
+prometheus-client>=0.19.0
+structlog>=23.2.0
+
+# Testing Framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+
+# Code Quality
+black>=23.9.0
+isort>=5.12.0
+flake8>=6.1.0
+mypy>=1.6.0
+
+# Development
+jupyterlab>=4.0.0
+ipython>=8.16.0
+notebook>=7.0.0
+
+# Utilities
+python-dateutil>=2.8.2
+pydantic[email]>=2.0
+email-validator>=2.0.0
+pytz>=2023.3
+click>=8.1.0
+rich>=13.6.0
+tqdm>=4.66.0
+
+# Optional: GPU Support (uncomment if using CUDA)
+# torch>=2.0.0+cu118
+# torchvision>=0.15.0+cu118
+# torchaudio>=2.0.0+cu118
+
+# Optional: Databases beyond sqlite3 (not used by current code)
+# sqlalchemy>=2.0.0
+# asyncpg>=0.29.0
+# redis>=5.0.0
+# alembic>=1.12.0
+
+# Optional: Advanced Vector Databases
+# pinecone-client>=2.2.4
+# weaviate-client>=3.24.0
+# qdrant-client>=1.6.0
+
+# Optional: Cloud Storage
+# boto3>=1.29.0
+# google-cloud-storage>=2.10.0
+# azure-storage-blob>=12.19.0

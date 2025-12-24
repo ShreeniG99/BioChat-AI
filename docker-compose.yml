@@ -1,0 +1,57 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: biorag-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=Dnu-k*qhaH-6SzY1G+AK
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - biorag-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -u elastic:Dnu-k*qhaH-6SzY1G+AK -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  biorag-backend:
+    build: .
+    container_name: biorag-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./cache:/app/cache
+      - ./faiss_index:/app/faiss_index
+      - ./embeddings_cache:/app/embeddings_cache
+    environment:
+      - ES_HOST=http://biorag-elasticsearch:9200
+      - ES_USER=elastic
+      - ES_PASSWORD=Dnu-k*qhaH-6SzY1G+AK
+      - SECRET_KEY=JqGkAPpz595lw1E02MRNbzuPy6iU6bD-hfmOTkjQICG1y5MaZIvVCX147kJyq4Ky5Ov7GAoTLOOT9t2v8lcMfA
+      - LOG_LEVEL=info
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - biorag-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  es_data:
+    driver: local
+
+networks:
+  biorag-network:
+    driver: bridge
