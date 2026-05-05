@@ -92,7 +92,9 @@ Final: min(0.98, max(0.1, confidence))
 cd Backend
 cp enhanced.env .env
 docker-compose up --build
-Option 2: Local Development
+```
+### Option 2: Local Development
+```bash
 # 1. Start Elasticsearch
 docker run -d --name elasticsearch \
   -p 9200:9200 \
