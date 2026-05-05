@@ -18,16 +18,18 @@ datasets:
 
 # BioChatAI – Fine-tuned BioGPT with LoRA for Biomedical Question Answering
 
-## Model Overview
+## Overview
 
-**BioChatAI** is a parameter-efficient, domain-adapted biomedical language model fine-tuned from **Microsoft’s BioGPT** using **LoRA (Low-Rank Adaptation)**.  
-It is designed for **biomedical question answering, literature synthesis, and research assistance**, while retaining the core biomedical knowledge of the base BioGPT model.
+**BioChatAI** is a full-stack AI research assistant that answers biomedical questions using real, 
+peer-reviewed scientific literature from **PubMed**. It does not hallucinate — every answer is 
+grounded in fetched articles with numbered citations [1], [2], [3]...
 
-The model was trained on curated biomedical question–answer pairs derived from **PubMedQA**, enabling accurate, citation-aware responses with minimal computational cost.
+<img width="1600" height="756" alt="image" src="https://github.com/user-attachments/assets/c0846a25-8ed1-4c4d-9d54-69b49672a11e" />
+<img width="1600" height="756" alt="image" src="https://github.com/user-attachments/assets/ccd9d33f-1bf1-46dd-b2fb-fb69051e4328" />
 
 ---
 
-## Model Details
+## Details
 
 - **Developed by:**  
   Shreenidhi G, Tharika N S, Thanushika Sri R A, Harithra S  
@@ -112,6 +114,9 @@ python Backend/main.py
 # 4. Open frontend/index.html in browser
 
 ```
+---
+## Evaluation and Performance
+<img width="1600" height="949" alt="image" src="https://github.com/user-attachments/assets/ef39181d-4ab0-48cb-a302-a7898f961da3" />
 ---
 
 ## Compute Infrastructure
