@@ -41,13 +41,13 @@ The model was trained on curated biomedical question–answer pairs derived from
 
 ---
 
-## 🗺️ System Workflow
+## Workflow
 
 ![BioChatAI Workflow](./assets/workflow.png)
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
