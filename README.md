@@ -24,11 +24,13 @@ datasets:
 peer-reviewed scientific literature from **PubMed**. It does not hallucinate — every answer is 
 grounded in fetched articles with numbered citations [1], [2], [3]...
 
-Home page:
+# Home page:
 
 <img width="1600" height="756" alt="image" src="https://github.com/user-attachments/assets/c0846a25-8ed1-4c4d-9d54-69b49672a11e" />
+
 ---
-Answer to biomedical query:
+
+# Answer to biomedical query:
 
 <img width="1600" height="756" alt="image" src="https://github.com/user-attachments/assets/ccd9d33f-1bf1-46dd-b2fb-fb69051e4328" />
 
