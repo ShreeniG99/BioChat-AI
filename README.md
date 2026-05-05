@@ -41,187 +41,77 @@ The model was trained on curated biomedical question–answer pairs derived from
 
 ---
 
-## Intended Uses
+## 🗺️ System Workflow
 
-### Direct Use
-
-BioChatAI is suitable for:
-
-- Biomedical question answering  
-- Literature synthesis and summarization  
-- Clinical and biomedical research assistance  
-- Medical education support  
-- Automated literature review  
-
-### Downstream Use
-
-The model can be integrated into:
-
-- Research assistant applications  
-- Medical chatbots (non-clinical)  
-- Healthcare information systems  
-- Academic research platforms  
-- Clinical decision-support tools (with expert oversight)  
-
-### Out-of-Scope Use
-
-This model **must not** be used for:
-
-- Direct clinical diagnosis or treatment decisions  
-- Patient-facing medical advice without professional supervision  
-- Emergency or life-critical medical situations  
-- Replacing licensed healthcare professionals  
+![BioChatAI Workflow](./assets/workflow.png)
 
 ---
 
-## Training Details
+## ⚙️ Tech Stack
 
-### Training Data
-
-- **Dataset:** PubMedQA (curated subset)  
-- **Size:** 50 high-quality biomedical QA pairs  
-- **Source:** Peer-reviewed PubMed abstracts  
-- **Domains:** Oncology, cardiology, neurology, immunology  
-- **Data characteristics:** Context-rich abstracts with verified citations  
-
-### Training Procedure
-
-- **Fine-tuning approach:** LoRA (parameter-efficient fine-tuning)  
-- **Target modules:** Query (Q) and Value (V) projection layers  
-
-#### LoRA Configuration
-
-- Rank (r): 8  
-- Alpha: 16  
-- Dropout: 0.1  
-- Trainable parameters: ~1.2M  
-- Percentage of total parameters trained: **0.53%**  
-
-#### Training Hyperparameters
-
-- Training regime: CPU-based  
-- Learning rate: 2e-4  
-- Batch size: 2  
-- Gradient accumulation steps: 4  
-- Epochs: 3  
-- Optimizer: AdamW  
-- Weight decay: 0.01  
-- Warmup steps: 100  
-- Max sequence length: 512  
-
-#### Training Performance
-
-- Training time: ~61 minutes (CPU)  
-- Final training loss: 2.89  
-- Loss reduction: 11% vs. base model  
-- Checkpoint size: ~4.8 MB (LoRA adapters only)  
-- Memory usage: ~8 GB RAM  
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vanilla HTML, CSS, JavaScript |
+| Backend | FastAPI (Python) + Uvicorn |
+| Authentication | JWT (HS256) + bcrypt (12 rounds) |
+| Database | SQLite (`users.db`) |
+| Embeddings | BioBERT (`dmis-lab/biobert-v1.1`) — 768-dim vectors |
+| Dense Search | FAISS (Facebook AI Similarity Search) |
+| Sparse Search | Elasticsearch (BM25) |
+| Hybrid Fusion | Reciprocal Rank Fusion (RRF) |
+| Answer Generation | Microsoft BioGPT (fine-tuned with LoRA) |
+| Data Source | NCBI PubMed E-utilities API |
+| ML Framework | HuggingFace Transformers + PyTorch |
 
 ---
 
-## Evaluation
 
-### Evaluation Data
+## Key Mathematics
 
-- **Dataset:** PubMedQA evaluation subset  
-- **Size:** 10 held-out biomedical questions  
-- **Coverage:** Multi-domain biomedical topics  
+### BioBERT Embeddings
+v ∈ ℝ⁷⁶⁸, L2-normalized: v̂ = v / ||v||₂
+Query: q̂ ∈ ℝ⁷⁶⁸ Articles: D = { d̂₁ ... d̂ₙ } ∈ ℝⁿˣ⁷⁶⁸
 
-### Metrics
+### Cosine Similarity (FAISS)
+cosine_similarity(q̂, d̂ᵢ) = q̂ · d̂ᵢ (dot product of normalized vectors)
 
-#### Language Generation Quality
+### Hybrid Search — Reciprocal Rank Fusion
+RRF(d) = 1/(60 + rank_dense) + 1/(60 + rank_sparse)
+final_score = 0.6 × RRF + 0.4 × (0.6×dense + 0.4×sparse)
 
-- BLEU-1: 0.116  
-- BLEU-2: 0.052  
-- Perplexity: 11% improvement over base BioGPT  
-
-#### Biomedical Performance (BioASQ-inspired)
-
-- F1 Score: 0.82  
-- Citation Accuracy: 94%  
-- Semantic Similarity: 0.87 (BioBERT-based)  
-
-#### System Performance
-
-- Average response time: ~30 seconds  
-- Context relevance score: 0.85  
-
-### Results Summary
-
-- 11% reduction in training loss  
-- High factual consistency with citations  
-- Strong domain-specific language generation  
-- Efficient adaptation with minimal trainable parameters  
+### Confidence Score
+confidence = 0.25×search_quality + 0.15×count_factor + 0.20×length_factor
++ 0.15×sentence_factor + 0.20×citation_factor + 0.05×bioterm_density
+Final: min(0.98, max(0.1, confidence))
 
 ---
 
-## Bias, Risks, and Limitations
+## Quick Start
+### Option 1: Docker (Recommended)
+```bash
+cd Backend
+cp enhanced.env .env
+docker-compose up --build
+Option 2: Local Development
+# 1. Start Elasticsearch
+docker run -d --name elasticsearch \
+  -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.11.0
 
-### Known Limitations
+# 2. Install Python dependencies
+pip install -r Backend/requirements.txt
 
-- Fine-tuned on a small dataset (50 QA pairs)  
-- English-only biomedical content  
-- Reflects publication bias present in biomedical literature  
-- Training data current only up to 2024  
-- Not validated for real-world clinical deployment  
+# 3. Run backend
+python Backend/main.py
 
-### Bias Considerations
-
-- Potential demographic and geographic bias toward Western biomedical research  
-- Limited representation of rare diseases  
-
-### Recommendations
-
-Users should:
-
-- Verify outputs against original research papers  
-- Use the model strictly as a research assistant  
-- Cross-check with updated clinical guidelines  
-- Consult healthcare professionals for medical decisions  
-
----
-
-## How to Use the Model
-
-```python
-from transformers import BioGptTokenizer, BioGptForCausalLM
-from peft import PeftModel
-
-# Load base model and tokenizer
-base_model_name = "microsoft/biogpt"
-tokenizer = BioGptTokenizer.from_pretrained(base_model_name)
-base_model = BioGptForCausalLM.from_pretrained(base_model_name)
-
-# Load LoRA adapter
-peft_model_id = "your-username/biochatai-biogpt-lora"
-model = PeftModel.from_pretrained(base_model, peft_model_id)
-
-# Generate a response
-query = "What is the mechanism of action of mRNA vaccines?"
-inputs = tokenizer(query, return_tensors="pt")
-outputs = model.generate(**inputs, max_length=512, temperature=0.7)
-response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-print(response)
+# 4. Open frontend/index.html in browser
 
 ```
+---
 
-## Technical Specifications
-### Architecture
-
-Base architecture: BioGPT (GPT-2 variant)
-
-Total parameters: 234M
-
-Transformer layers: 16
-
-Attention heads: 16
-
-Hidden size: 1024
-
-Vocabulary size: 42,384 (biomedical-specific)
-
-### Compute Infrastructure
+## Compute Infrastructure
 #### Hardware
 
 CPU-based training
