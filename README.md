@@ -43,7 +43,8 @@ The model was trained on curated biomedical question–answer pairs derived from
 
 ## Workflow
 
-![BioChatAI Workflow](./assets/workflow.png)
+![BioChatAI Workflow](./workflow(1).png)
+<img width="1920" height="1080" alt="Workflow (1)" src="https://github.com/user-attachments/assets/4bbbdaca-36d6-47d9-96dd-2287a1d5e57e" />
 
 ---
 
