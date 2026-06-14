@@ -2,15 +2,9 @@
 Enhanced BioRAG FastAPI Application - Phase 1 (CORRECTED)
 Production-ready server with comprehensive health monitoring, CORS, and auth routes
 """
-import sys
+
 import os
-
-# Add parent directory to path to allow Backend imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Fix Windows console encoding issues
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8')
+import sys
 import json
 import logging
 from typing import Dict, Any
@@ -24,12 +18,19 @@ from fastapi import FastAPI, HTTPException, status, BackgroundTasks, APIRouter, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+# Allow `from Backend.services...` and `from main import app` to coexist
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Fix Windows console encoding issues
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # ------------------------------------------------------------------------------
 # Environment Setup
 # ------------------------------------------------------------------------------
 load_dotenv()
 load_dotenv("enhanced.env")
-load_dotenv(".env")
+load_dotenv(".env")  # Also check for standard .env
 
 # ------------------------------------------------------------------------------
 # Logging Configuration
@@ -118,32 +119,35 @@ async def get_services() -> Dict[str, Any]:
             es_password=os.getenv("ES_PASSWORD", "")
         )
         
-        # USE LIGHTWEIGHT SERVICE - Fast and reliable for demos
-        from Backend.services.lightweight_rag_service import LightweightRAGService
-        _services["rag"] = LightweightRAGService()
-        logger.info("⚡ Using Lightweight RAG service (fast, real PubMed data, no heavy models)")
+        _services["rag"] = EnhancedRAGService(
+            _services["document"], 
+            _services["embedding"], 
+            _services["vector_search"]
+        )
         
         _services["evaluation"] = EvaluationService(_services["rag"])
 
-        # Don't initialize vector search - not needed for lightweight mode
-        # await _services["vector_search"].initialize()
+        # Initialize vector search service
+        await _services["vector_search"].initialize()
 
         # Update health status
-        health_status["generator_loaded"] = True  # Lightweight mode doesn't need models
+        health_status["generator_loaded"] = bool(
+            getattr(_services["rag"], "generator_loaded", False)
+        )
         health_status["services_initialized"] = True
 
-        logger.info("✅ All services initialized successfully")
+        logger.info("All services initialized successfully")
         return _services
 
     except ImportError as e:
-        logger.error(f"❌ Service import failed: {e}")
+        logger.error(f"Service import failed: {e}")
         logger.error("Ensure all service files are in Backend/services/ directory")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Service import failed: {e}",
         )
     except Exception as e:
-        logger.exception("❌ Service initialization failed")
+        logger.exception("Service initialization failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Service initialization failed: {e}",
@@ -162,13 +166,13 @@ async def check_elasticsearch_health() -> bool:
             health_status["elasticsearch_last_check"] = datetime.utcnow().isoformat()
             
             if ok:
-                logger.info(f"✅ Elasticsearch OK: {resp.json().get('status', 'unknown')}")
+                logger.info(f"Elasticsearch OK: {resp.json().get('status', 'unknown')}")
             else:
-                logger.warning(f"⚠️ Elasticsearch HTTP {resp.status_code}")
+                logger.warning(f"Elasticsearch HTTP {resp.status_code}")
             return ok
             
     except Exception as e:
-        logger.warning(f"⚠️ Elasticsearch check failed: {e}")
+        logger.warning(f"Elasticsearch check failed: {e}")
         health_status["elasticsearch_last_check"] = datetime.utcnow().isoformat()
         return False
 
@@ -177,7 +181,7 @@ async def check_elasticsearch_health() -> bool:
 # ------------------------------------------------------------------------------
 @app.on_event("startup")
 async def on_startup() -> None:
-    logger.info("🚀 Starting Enhanced BioRAG API...")
+    logger.info("Starting Enhanced BioRAG API...")
 
     # Check Elasticsearch
     es_ok = await check_elasticsearch_health()
@@ -187,16 +191,16 @@ async def on_startup() -> None:
     try:
         import faiss  # noqa: F401
         health_status["faiss_available"] = True
-        logger.info("✅ FAISS available")
+        logger.info("FAISS available")
     except ImportError:
         health_status["faiss_available"] = False
-        logger.info("⚠️ FAISS not available (install faiss-cpu for dense search)")
+        logger.info("FAISS not available (install faiss-cpu for dense search)")
     
     health_status["hybrid_search"] = (
         health_status["elasticsearch_available"] and health_status["faiss_available"]
     )
     
-    logger.info("✅ Startup complete")
+    logger.info("Startup complete")
 
 # ------------------------------------------------------------------------------
 # Core API Routes
@@ -211,7 +215,7 @@ async def root() -> Dict[str, Any]:
         "health": "/health",
         "endpoints": {
             "index": "POST /index",
-            "query": "POST /query OR POST /api/query", 
+            "query": "POST /query", 
             "evaluate": "POST /evaluate",
             "auth": ["POST /api/auth/signup", "POST /api/auth/login"],
         },
@@ -248,11 +252,11 @@ async def health() -> Dict[str, Any]:
 async def index_documents_task(document_service, embedding_service, vector_search_service, topics, max_docs):
     """Background task for document indexing"""
     try:
-        logger.info(f"📄 Starting indexing for {len(topics)} topics...")
+        logger.info(f"Starting indexing for {len(topics)} topics...")
         total_indexed = 0
         
         for topic in topics:
-            logger.info(f"📚 Indexing topic: {topic}")
+            logger.info(f"Indexing topic: {topic}")
             docs = await document_service.search_and_fetch(topic, max_docs)
             
             for doc in docs:
@@ -261,10 +265,10 @@ async def index_documents_task(document_service, embedding_service, vector_searc
                     await vector_search_service.add_documents(chunks)
                     total_indexed += len(chunks)
         
-        logger.info(f"✅ Indexing completed: {total_indexed} chunks indexed")
+        logger.info(f"Indexing completed: {total_indexed} chunks indexed")
         
     except Exception as e:
-        logger.exception(f"❌ Indexing failed: {e}")
+        logger.exception(f"Indexing failed: {e}")
 
 # ------------------------------------------------------------------------------
 # RAG Endpoints
@@ -299,12 +303,11 @@ async def index_documents(request: Dict[str, Any], background_tasks: BackgroundT
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("❌ Index request failed")
+        logger.exception("Index request failed")
         raise HTTPException(status_code=500, detail=f"Indexing failed: {e}")
 
 @app.post("/query")
 async def process_query(request: Dict[str, Any]):
-    """Main query processing endpoint"""
     try:
         services = await get_services()
         query = request.get("query", "").strip()
@@ -316,8 +319,6 @@ async def process_query(request: Dict[str, Any]):
         max_results = min(int(request.get("max_results", 10)), 50)
         user_id = request.get("user_id")
         
-        logger.info(f"🔍 Processing query: {query[:50]}...")
-        
         result = await services["rag"].process_query(
             query=query, 
             max_results=max_results, 
@@ -325,22 +326,15 @@ async def process_query(request: Dict[str, Any]):
         )
         
         confidence = float(result.get("confidence_score", 0.0))
-        logger.info(f"✅ Query processed (confidence={confidence:.2f}, citations={len(result.get('citations', []))})")
+        logger.info(f"Query processed (confidence={confidence:.2f}, citations={len(result.get('citations', []))})")
         
         return result
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("❌ Query processing failed")
+        logger.exception("Query processing failed")
         raise HTTPException(status_code=500, detail=f"Query processing failed: {e}")
-
-# CRITICAL FIX: Add /api/query endpoint for frontend compatibility
-@app.post("/api/query")
-async def api_process_query(request: Dict[str, Any]):
-    """API query endpoint - forwards to main query handler"""
-    logger.info("📡 API query endpoint called")
-    return await process_query(request)
 
 @app.post("/evaluate")
 async def run_evaluation(request: Dict[str, Any]):
@@ -368,7 +362,7 @@ async def run_evaluation(request: Dict[str, Any]):
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("❌ Evaluation failed")
+        logger.exception("Evaluation failed")
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {e}")
 
 # ------------------------------------------------------------------------------
@@ -388,7 +382,6 @@ class LoginRequest(BaseModel):
 @auth_router.post("/signup")
 async def signup(payload: SignupRequest) -> Dict[str, Any]:
     try:
-        # FIXED: Correct import path
         from Backend.services.auth_service import get_auth_service
         
         auth = get_auth_service()
@@ -398,26 +391,23 @@ async def signup(payload: SignupRequest) -> Dict[str, Any]:
             name=payload.name
         )
         
-        logger.info(f"✅ User registered: {payload.email}")
+        logger.info(f"User registered: {payload.email}")
         
         return {
-            "success": True,
             "user": user, 
-            "token": token, 
-            "access_token": token,
+            "access_token": token, 
             "token_type": "bearer"
         }
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.exception(f"❌ Signup failed for {payload.email}")
+        logger.exception(f"Signup failed for {payload.email}")
         raise HTTPException(status_code=500, detail=f"Registration failed: {e}")
 
 @auth_router.post("/login") 
 async def login(payload: LoginRequest) -> Dict[str, Any]:
     try:
-        # FIXED: Correct import path
         from Backend.services.auth_service import get_auth_service
         
         auth = get_auth_service()
@@ -426,12 +416,10 @@ async def login(payload: LoginRequest) -> Dict[str, Any]:
             password=payload.password
         )
         
-        logger.info(f"✅ User authenticated: {payload.email}")
+        logger.info(f"User authenticated: {payload.email}")
         
         return {
-            "success": True,
             "user": user, 
-            "token": token,
             "access_token": token, 
             "token_type": "bearer"
         }
@@ -439,7 +427,7 @@ async def login(payload: LoginRequest) -> Dict[str, Any]:
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
-        logger.exception(f"❌ Login failed for {payload.email}")
+        logger.exception(f"Login failed for {payload.email}")
         raise HTTPException(status_code=500, detail=f"Authentication failed: {e}")
 
 # Mount auth router
@@ -455,13 +443,13 @@ async def not_found_handler(request, exc):
         content={
             "error": "Endpoint not found",
             "message": "Check /docs for available endpoints",
-            "available_endpoints": ["/health", "/", "/index", "/query", "/api/query", "/evaluate", "/api/auth/*"],
+            "available_endpoints": ["/health", "/", "/index", "/query", "/evaluate", "/api/auth/*"],
         },
     )
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
-    logger.error(f"❌ Internal server error: {exc}")
+    logger.error(f"Internal server error: {exc}")
     return JSONResponse(
         status_code=500,
         content={

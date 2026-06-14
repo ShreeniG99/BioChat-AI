@@ -1,0 +1,25 @@
+BioGPT Fine-Tuned for Biomedical Question Answering
+============================================================
+
+Base Model: microsoft/biogpt
+Fine-tuning Method: LoRA (Low-Rank Adaptation)
+Training Dataset: PubMedQA (labeled subset)
+Number of Examples: 50
+Training Steps: 50
+Trainable Parameters: 786,432 (0.23%)
+Total Parameters: 347,549,696
+
+LoRA Configuration:
+  - Rank (r): 8
+  - Alpha: 16
+  - Target Modules: {'q_proj', 'v_proj'}
+  - Dropout: 0.05
+
+Training Configuration:
+  - Batch Size: 2
+  - Gradient Accumulation: 4
+  - Learning Rate: 0.0002
+  - Max Length: 256 tokens
+
+This model can be used in place of the base BioGPT model
+for improved performance on biomedical question answering tasks.
