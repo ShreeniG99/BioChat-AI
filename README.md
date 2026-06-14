@@ -46,7 +46,7 @@ grounded in fetched articles with numbered citations [1], [2], [3]...
 - **Base model:** microsoft/biogpt (234M parameters)  
 - **Fine-tuning method:** LoRA (Low-Rank Adaptation)  
 - **Language:** English (Biomedical domain)  
-- **License:** MIT  
+- **License:** Apache 2.0  
 
 ---
 
